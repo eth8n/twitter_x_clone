@@ -9,10 +9,15 @@ services:
     volumes:
       - static_volume:/home/app/web/project/static
       - media_volume:/home/app/web/project/media
+      - ./services/web/:/usr/src/app/
     expose:
       - 5000
     env_file:
       - ./.env.prod
+    environment:
+      - DATABASE=postgres
+      - SQL_HOST=db
+      - SQL_PORT=5432
     depends_on:
       - db
   db:
@@ -21,6 +26,10 @@ services:
       - postgres_data_prod:/var/lib/postgresql/data/
     env_file:
       - ./.env.prod.db
+    environment:
+      - POSTGRES_USER=hello_flask
+      - POSTGRES_PASSWORD=hello_flask
+      - POSTGRES_DB=hello_flask_dev
   nginx:
     build: ./services/nginx
     volumes:

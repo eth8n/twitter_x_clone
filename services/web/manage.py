@@ -14,8 +14,6 @@ def create_db():
         conn.execute(text("DROP SCHEMA public CASCADE;"))
         conn.execute(text("CREATE SCHEMA public;"))
         conn.commit()
-    
-    # Create all tables
     db.create_all()
     db.session.commit()
 

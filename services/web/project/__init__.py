@@ -6,6 +6,8 @@ from flask import (
     jsonify,
     send_from_directory,
     request,
+    render_template,
+    url_for
 )
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
@@ -30,9 +32,30 @@ class User(db.Model):
         self.email = email
 
 
+class Tweet(db.Model):
+    __tablename__ = "tweets"
+
+    tweet_id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+    likes_count = db.Column(db.Integer, default=0)
+    retweets_count = db.Column(db.Integer, default=0)
+
+    # Relationship with User
+    user = db.relationship('User', backref=db.backref('tweets', lazy=True))
+
+
 @app.route("/")
-def hello_world():
-    return jsonify(hello="world")
+def index():
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+    # Get paginated tweets with user information
+    tweets = Tweet.query\
+        .join(User)\
+        .order_by(Tweet.created_at.desc())\
+        .paginate(page=page, per_page=per_page, error_out=False)
+    return render_template('index.html', tweets=tweets)
 
 
 @app.route("/static/<path:filename>")

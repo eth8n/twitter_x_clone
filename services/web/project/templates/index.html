@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitter Clone - Home</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .tweet {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+        }
+        .tweet-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            color: #666;
+        }
+        .tweet-content {
+            margin-bottom: 10px;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .pagination a {
+            padding: 5px 10px;
+            text-decoration: none;
+            color: #1da1f2;
+            border: 1px solid #1da1f2;
+            border-radius: 3px;
+        }
+        .pagination a:hover {
+            background-color: #1da1f2;
+            color: white;
+        }
+        .pagination .current {
+            background-color: #1da1f2;
+            color: white;
+        }
+        .menu {
+            background-color: #1da1f2;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .menu a {
+            color: white;
+            text-decoration: none;
+            margin-right: 15px;
+        }
+        .menu a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="menu">
+        <a href="{{ url_for('index') }}">Home</a>
+        <!-- Add more menu items here -->
+    </div>
+
+    <h1>Recent Tweets</h1>
+
+    {% for tweet in tweets.items %}
+    <div class="tweet">
+        <div class="tweet-header">
+            <span class="username">@{{ tweet.user.username }}</span>
+            <span class="timestamp">{{ tweet.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+        </div>
+        <div class="tweet-content">
+            {{ tweet.content }}
+        </div>
+        <div class="tweet-stats">
+            <span>❤️ {{ tweet.likes_count }}</span>
+            <span>🔄 {{ tweet.retweets_count }}</span>
+        </div>
+    </div>
+    {% endfor %}
+
+    <div class="pagination">
+        {% if tweets.has_prev %}
+            <a href="{{ url_for('index', page=tweets.prev_num) }}">Previous</a>
+        {% endif %}
+        
+        {% for page_num in tweets.iter_pages(left_edge=2, left_current=2, right_current=3, right_edge=2) %}
+            {% if page_num %}
+                {% if page_num == tweets.page %}
+                    <span class="current">{{ page_num }}</span>
+                {% else %}
+                    <a href="{{ url_for('index', page=page_num) }}">{{ page_num }}</a>
+                {% endif %}
+            {% else %}
+                <span>...</span>
+            {% endif %}
+        {% endfor %}
+        
+        {% if tweets.has_next %}
+            <a href="{{ url_for('index', page=tweets.next_num) }}">Next</a>
+        {% endif %}
+    </div>
+</body>
+</html> 

@@ -83,10 +83,14 @@ def load_data(conn, users, tweets, urls):
     cur.close()
 
 def main():
-    parser = argparse.ArgumentParser(description='Load test data into the database')
-    parser.add_argument('--rows', type=int, default=100,
-                      help='Number of base rows to generate (default: 100)')
-    args = parser.parse_args()
+    # Check if running in GitHub Actions
+    is_github_actions = os.getenv('GITHUB_ACTIONS') == 'true'
+    
+    # Set number of rows based on environment
+    num_rows = 100 if is_github_actions else 1000000
+    
+    print(f"Running in {'GitHub Actions' if is_github_actions else 'local'} environment")
+    print(f"Generating {num_rows} base rows...")
     
     # Database connection parameters
     db_params = {
@@ -102,8 +106,7 @@ def main():
         conn = psycopg2.connect(**db_params)
         
         # Generate test data
-        print(f"Generating test data for {args.rows} base rows...")
-        users, tweets, urls = generate_test_data(args.rows)
+        users, tweets, urls = generate_test_data(num_rows)
         
         # Load data into database
         print("Loading data into database...")

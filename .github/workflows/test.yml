@@ -2,9 +2,9 @@ name: Test Application
 
 on:
   push:
-    branches: [ main ]
+    branches: [ '*' ]
   pull_request:
-    branches: [ main ]
+    branches: [ '*' ]
 
 jobs:
   test:
@@ -19,7 +19,7 @@ jobs:
     - name: Build and start containers
       run: |
         docker compose build
-        docker      compose up -d
+        docker compose up -d
         
     - name: Wait for services to be ready
       run: |
@@ -32,7 +32,7 @@ jobs:
         sleep 10
         # Here you would add commands to load your test data
         # For example, if you have a script to load test data:
-        # docker-compose exec web python manage.py load_test_data
+        docker compose exec db python3 /docker-entrypoint-initdb.d/load_test_data.py
         
     - name: Check for errors
       run: |

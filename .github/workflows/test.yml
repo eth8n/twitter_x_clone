@@ -27,11 +27,12 @@ jobs:
         timeout 30s bash -c 'until docker compose exec db pg_isready; do sleep 1; done'
         
     - name: Load test data
+      env:
+        GITHUB_ACTIONS: 'true'
       run: |
         # Wait a bit for the web service to be ready
         sleep 10
-        # Here you would add commands to load your test data
-        # For example, if you have a script to load test data:
+        # Load test data with small dataset for testing
         docker compose exec db python3 /docker-entrypoint-initdb.d/load_test_data.py
         
     - name: Check for errors

@@ -87,7 +87,7 @@ def main():
     is_github_actions = os.getenv('GITHUB_ACTIONS') == 'true'
     
     # Set number of rows based on environment
-    num_rows = 100 if is_github_actions else 1000000
+    num_rows = 100 if is_github_actions else 1000
     
     print(f"Running in {'GitHub Actions' if is_github_actions else 'local'} environment")
     print(f"Generating {num_rows} base rows...")

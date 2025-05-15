@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 
 from flask import (
     Flask,
@@ -17,11 +18,15 @@ db = SQLAlchemy(app)
 class User(db.Model):
     __tablename__ = "users"
 
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(128), unique=True, nullable=False)
-    active = db.Column(db.Boolean(), default=True, nullable=False)
+    user_id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(50), unique=True, nullable=False)
+    email = db.Column(db.String(255), unique=True, nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+    last_login = db.Column(db.DateTime(timezone=True))
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
 
-    def __init__(self, email):
+    def __init__(self, username, email):
+        self.username = username
         self.email = email
 
 

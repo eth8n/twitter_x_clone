@@ -21,8 +21,8 @@ def generate_test_data(num_rows):
     users = []
     for i in range(num_rows):
         users.append((
-            fake.user_name(),
-            fake.email(),
+            fake.unique.user_name(),  # Use unique to avoid duplicates
+            fake.unique.email(),      # Use unique to avoid duplicates
             fake.date_time_between(start_date, end_date),
             fake.date_time_between(start_date, end_date),
             random.choice([True, False])
@@ -57,6 +57,28 @@ def generate_test_data(num_rows):
         ))
     
     return users, tweets, urls
+
+def ensure_tables_exist(conn):
+    cur = conn.cursor()
+    
+    # Read and execute schema.sql
+    with open('/docker-entrypoint-initdb.d/schema.sql', 'r') as f:
+        schema_sql = f.read()
+        cur.execute(schema_sql)
+    
+    conn.commit()
+    cur.close()
+
+def clear_existing_data(conn):
+    cur = conn.cursor()
+    try:
+        # Drop all data but keep the schema
+        cur.execute("TRUNCATE urls, tweets, users CASCADE;")
+        conn.commit()
+    except psycopg2.Error as e:
+        print(f"Warning: Could not truncate tables: {e}")
+    finally:
+        cur.close()
 
 def load_data(conn, users, tweets, urls):
     cur = conn.cursor()
@@ -104,6 +126,14 @@ def main():
     try:
         # Connect to the database
         conn = psycopg2.connect(**db_params)
+        
+        # Ensure tables exist
+        print("Ensuring tables exist...")
+        ensure_tables_exist(conn)
+        
+        # Clear existing data
+        print("Clearing existing data...")
+        clear_existing_data(conn)
         
         # Generate test data
         users, tweets, urls = generate_test_data(num_rows)

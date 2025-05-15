@@ -22,7 +22,10 @@ def create_db():
 
 @cli.command("seed_db")
 def seed_db():
-    db.session.add(User(email="michael@mherman.org"))
+    db.session.add(User(
+        username="michael",
+        email="michael@mherman.org"
+    ))
     db.session.commit()
 
 

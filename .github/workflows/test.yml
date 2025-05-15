@@ -1,0 +1,47 @@
+name: Test Application
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+      
+    - name: Build and start containers
+      run: |
+        docker compose build
+        docker      compose up -d
+        
+    - name: Wait for services to be ready
+      run: |
+        # Wait for PostgreSQL to be ready
+        timeout 30s bash -c 'until docker compose exec db pg_isready; do sleep 1; done'
+        
+    - name: Load test data
+      run: |
+        # Wait a bit for the web service to be ready
+        sleep 10
+        # Here you would add commands to load your test data
+        # For example, if you have a script to load test data:
+        # docker-compose exec web python manage.py load_test_data
+        
+    - name: Check for errors
+      run: |
+        # Check if containers are running
+        docker compose ps
+        # Check container logs for errors
+        docker compose logs
+        
+    - name: Cleanup
+      if: always()
+      run: |
+        docker compose down -v 

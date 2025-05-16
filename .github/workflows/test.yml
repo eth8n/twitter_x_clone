@@ -16,6 +16,18 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
       
+    - name: Create environment file
+      run: |
+        # Create .env.dev file with required environment variables
+        echo "FLASK_APP=project/__init__.py
+FLASK_DEBUG=1
+DATABASE_URL=postgresql://hello_flask:hello_flask@db:5432/hello_flask_dev
+SQL_HOST=db
+SQL_PORT=5432
+DATABASE=postgres
+APP_FOLDER=/usr/src/app" > .env.dev
+        cat .env.dev
+      
     - name: Build and start containers
       run: |
         docker compose build

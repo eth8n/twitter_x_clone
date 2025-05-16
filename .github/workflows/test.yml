@@ -33,7 +33,57 @@ jobs:
         # Wait a bit for the web service to be ready
         sleep 10
         # Load test data with small dataset for testing
-        docker compose exec db python3 /docker-entrypoint-initdb.d/load_test_data.py
+        docker compose exec db python3 /scripts/load_test_data.py
+    
+    - name: Test database functionality
+      run: |
+        echo "Running database tests..."
+        
+        # Test 1: Check if tables exist
+        echo "Test 1: Verifying tables exist"
+        docker compose exec db psql -U hello_flask -d hello_flask_dev -c "\dt" | grep -q "users" && \
+        docker compose exec db psql -U hello_flask -d hello_flask_dev -c "\dt" | grep -q "tweets" && \
+        docker compose exec db psql -U hello_flask -d hello_flask_dev -c "\dt" | grep -q "urls" && \
+        echo "✅ Tables exist" || (echo "❌ Some tables are missing" && exit 1)
+        
+        # Test 2: Verify data was loaded properly
+        echo "Test 2: Verifying data was loaded"
+        USERS_COUNT=$(docker compose exec db psql -U hello_flask -d hello_flask_dev -t -c "SELECT COUNT(*) FROM users")
+        TWEETS_COUNT=$(docker compose exec db psql -U hello_flask -d hello_flask_dev -t -c "SELECT COUNT(*) FROM tweets")
+        
+        # Convert to integers and remove whitespace
+        USERS_COUNT=$(echo $USERS_COUNT | xargs)
+        TWEETS_COUNT=$(echo $TWEETS_COUNT | xargs)
+        
+        # Check if counts are greater than zero
+        if [ "$USERS_COUNT" -gt 0 ] && [ "$TWEETS_COUNT" -gt 0 ]; then
+          echo "✅ Data was loaded successfully (Users: $USERS_COUNT, Tweets: $TWEETS_COUNT)"
+        else
+          echo "❌ Data loading failed (Users: $USERS_COUNT, Tweets: $TWEETS_COUNT)"
+          exit 1
+        fi
+        
+        # Test 3: Test a basic SELECT query with JOIN to ensure relationships work
+        echo "Test 3: Testing SQL JOIN query"
+        JOIN_RESULT=$(docker compose exec db psql -U hello_flask -d hello_flask_dev -t -c "SELECT COUNT(*) FROM tweets t JOIN users u ON t.user_id = u.user_id")
+        JOIN_COUNT=$(echo $JOIN_RESULT | xargs)
+        
+        if [ "$JOIN_COUNT" -gt 0 ]; then
+          echo "✅ JOIN query successful with $JOIN_COUNT results"
+        else
+          echo "❌ JOIN query failed"
+          exit 1
+        fi
+        
+        # Test 4: Test full-text search functionality
+        echo "Test 4: Testing full-text search"
+        FTS_RESULT=$(docker compose exec db psql -U hello_flask -d hello_flask_dev -t -c "SELECT COUNT(*) FROM tweets WHERE content_tsv @@ plainto_tsquery('english', 'government')")
+        FTS_COUNT=$(echo $FTS_RESULT | xargs)
+        
+        echo "Full-text search returned $FTS_COUNT results"
+        echo "✅ Full-text search query executed successfully"
+        
+        echo "All database tests passed! ✅"
         
     - name: Check for errors
       run: |

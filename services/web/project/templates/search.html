@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search - Twitter Clone</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .search-form {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .search-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        .tweet {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+        }
+        .tweet-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            color: #666;
+        }
+        .tweet-content {
+            margin-bottom: 10px;
+        }
+        .highlight {
+            background-color: #fff3cd;
+            padding: 2px;
+            border-radius: 2px;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .pagination a {
+            padding: 5px 10px;
+            text-decoration: none;
+            color: #1da1f2;
+            border: 1px solid #1da1f2;
+            border-radius: 3px;
+        }
+        .pagination a:hover {
+            background-color: #1da1f2;
+            color: white;
+        }
+        .pagination .current {
+            background-color: #1da1f2;
+            color: white;
+        }
+        .menu {
+            background-color: #1da1f2;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .menu a {
+            color: white;
+            text-decoration: none;
+            margin-right: 15px;
+        }
+        .menu a:hover {
+            text-decoration: underline;
+        }
+        .search-stats {
+            color: #666;
+            margin: 10px 0;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="menu">
+        <a href="{{ url_for('index') }}">Home</a>
+        {% if current_user.is_authenticated %}
+            <a href="{{ url_for('create_message') }}">Create Message</a>
+            <a href="{{ url_for('logout') }}">Logout</a>
+        {% else %}
+            <a href="{{ url_for('login') }}">Login</a>
+            <a href="{{ url_for('create_account') }}">Create Account</a>
+        {% endif %}
+        <a href="{{ url_for('search') }}">Search</a>
+    </div>
+
+    <div class="search-form">
+        <form method="GET" action="{{ url_for('search') }}">
+            <input type="text" name="q" class="search-input" placeholder="Search messages..." value="{{ query if query else '' }}" required>
+        </form>
+    </div>
+
+    {% if query %}
+        <div class="search-stats">
+            {% if tweets.total > 0 %}
+                Found {{ tweets.total }} result{% if tweets.total != 1 %}s{% endif %} for "{{ query }}"
+            {% else %}
+                No results found for "{{ query }}"
+            {% endif %}
+        </div>
+
+        {% for tweet in tweets.items %}
+        <div class="tweet">
+            <div class="tweet-header">
+                <span class="username">@{{ tweet.user.username }}</span>
+                <span class="timestamp">{{ tweet.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+            </div>
+            <div class="tweet-content">
+                {{ tweet.highlighted_content | safe }}
+            </div>
+            <div class="tweet-stats">
+                <span>❤️ {{ tweet.likes_count }}</span>
+                <span>🔄 {{ tweet.retweets_count }}</span>
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="pagination">
+            {% if tweets.has_prev %}
+                <a href="{{ url_for('search', q=query, page=tweets.prev_num) }}">Previous</a>
+            {% endif %}
+            
+            {% for page_num in tweets.iter_pages(left_edge=2, left_current=2, right_current=3, right_edge=2) %}
+                {% if page_num %}
+                    {% if page_num == tweets.page %}
+                        <span class="current">{{ page_num }}</span>
+                    {% else %}
+                        <a href="{{ url_for('search', q=query, page=page_num) }}">{{ page_num }}</a>
+                    {% endif %}
+                {% else %}
+                    <span>...</span>
+                {% endif %}
+            {% endfor %}
+            
+            {% if tweets.has_next %}
+                <a href="{{ url_for('search', q=query, page=tweets.next_num) }}">Next</a>
+            {% endif %}
+        </div>
+    {% endif %}
+</body>
+</html> 

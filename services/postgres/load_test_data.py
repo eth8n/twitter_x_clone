@@ -12,51 +12,80 @@ from faker import Faker
 def generate_random_string(length):
     return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
 
-def generate_test_data(num_rows):
-    fake = Faker()
-    start_date = datetime(2020, 1, 1)
-    end_date = datetime.now()
-    
-    # Generate users
+def generate_user_batch(start_idx, batch_size, fake):
     users = []
-    for i in range(num_rows):
-        users.append((
-            fake.unique.user_name(),  # Use unique to avoid duplicates
-            fake.unique.email(),      # Use unique to avoid duplicates
-            fake.date_time_between(start_date, end_date),
-            fake.date_time_between(start_date, end_date),
-            random.choice([True, False])
-        ))
-    
-    # Generate tweets (10x more than users)
+    for i in range(start_idx, start_idx + batch_size):
+        username = f"user_{i}"
+        email = f"user_{i}@example.com"
+        password_hash = fake.sha256()
+        created_at = fake.date_time_between(datetime(2020, 1, 1), datetime.now())
+        last_login = fake.date_time_between(datetime(2020, 1, 1), datetime.now())
+        is_active = random.choice([True, False])
+        users.append((username, email, password_hash, created_at, last_login, is_active))
+    return users
+
+def generate_tweet_batch(start_idx, batch_size, num_users, fake):
     tweets = []
-    for i in range(num_rows * 10):
-        user_id = random.randint(1, num_rows)
+    for i in range(start_idx, start_idx + batch_size):
+        user_id = random.randint(1, num_users)
         content = fake.text(max_nb_chars=280)
-        created_at = fake.date_time_between(start_date, end_date)
-        tweets.append((
-            user_id,
-            content,
-            created_at,
-            random.randint(0, 10000),
-            random.randint(0, 5000)
-        ))
-    
-    # Generate URLs (2x more than tweets)
+        created_at = fake.date_time_between(datetime(2020, 1, 1), datetime.now())
+        likes_count = random.randint(0, 10000)
+        retweets_count = random.randint(0, 5000)
+        tweets.append((user_id, content, created_at, likes_count, retweets_count))
+    return tweets
+
+def generate_url_batch(start_idx, batch_size, num_tweets, fake):
     urls = []
-    for i in range(num_rows * 20):
-        tweet_id = random.randint(1, num_rows * 10)
+    for i in range(start_idx, start_idx + batch_size):
+        tweet_id = random.randint(1, num_tweets)
         url = fake.url()
-        created_at = fake.date_time_between(start_date, end_date)
-        urls.append((
-            tweet_id,
-            url,
-            created_at,
-            random.choice([True, False]),
-            fake.date_time_between(start_date, end_date)
-        ))
+        created_at = fake.date_time_between(datetime(2020, 1, 1), datetime.now())
+        is_valid = random.choice([True, False])
+        last_checked = fake.date_time_between(datetime(2020, 1, 1), datetime.now())
+        urls.append((tweet_id, url, created_at, is_valid, last_checked))
+    return urls
+
+def load_data_in_chunks(conn, num_rows, batch_size=1000):
+    cur = conn.cursor()
+    fake = Faker()
     
-    return users, tweets, urls
+    print(f"Loading data in batches of {batch_size}...")
+    
+    # Load users in chunks
+    for i in range(0, num_rows, batch_size):
+        current_batch_size = min(batch_size, num_rows - i)
+        users = generate_user_batch(i, current_batch_size, fake)
+        execute_values(cur, """
+            INSERT INTO users (username, email, password_hash, created_at, last_login, is_active)
+            VALUES %s
+        """, users)
+        conn.commit()
+        print(f"Loaded users {i+1} to {i+current_batch_size}")
+    
+    # Load tweets in chunks
+    for i in range(0, num_rows * 10, batch_size):
+        current_batch_size = min(batch_size, (num_rows * 10) - i)
+        tweets = generate_tweet_batch(i, current_batch_size, num_rows, fake)
+        execute_values(cur, """
+            INSERT INTO tweets (user_id, content, created_at, likes_count, retweets_count)
+            VALUES %s
+        """, tweets)
+        conn.commit()
+        print(f"Loaded tweets {i+1} to {i+current_batch_size}")
+    
+    # Load URLs in chunks
+    for i in range(0, num_rows * 20, batch_size):
+        current_batch_size = min(batch_size, (num_rows * 20) - i)
+        urls = generate_url_batch(i, current_batch_size, num_rows * 10, fake)
+        execute_values(cur, """
+            INSERT INTO urls (tweet_id, url, created_at, is_valid, last_checked)
+            VALUES %s
+        """, urls)
+        conn.commit()
+        print(f"Loaded URLs {i+1} to {i+current_batch_size}")
+    
+    cur.close()
 
 def ensure_tables_exist(conn):
     cur = conn.cursor()
@@ -79,30 +108,6 @@ def clear_existing_data(conn):
         print(f"Warning: Could not truncate tables: {e}")
     finally:
         cur.close()
-
-def load_data(conn, users, tweets, urls):
-    cur = conn.cursor()
-    
-    # Load users
-    execute_values(cur, """
-        INSERT INTO users (username, email, created_at, last_login, is_active)
-        VALUES %s
-    """, users)
-    
-    # Load tweets
-    execute_values(cur, """
-        INSERT INTO tweets (user_id, content, created_at, likes_count, retweets_count)
-        VALUES %s
-    """, tweets)
-    
-    # Load URLs
-    execute_values(cur, """
-        INSERT INTO urls (tweet_id, url, created_at, is_valid, last_checked)
-        VALUES %s
-    """, urls)
-    
-    conn.commit()
-    cur.close()
 
 def main():
     # Check if running in GitHub Actions
@@ -135,17 +140,14 @@ def main():
         print("Clearing existing data...")
         clear_existing_data(conn)
         
-        # Generate test data
-        users, tweets, urls = generate_test_data(num_rows)
-        
-        # Load data into database
+        # Load data in chunks
         print("Loading data into database...")
-        load_data(conn, users, tweets, urls)
+        load_data_in_chunks(conn, num_rows)
         
         print("Data loading completed successfully!")
-        print(f"Loaded {len(users)} users")
-        print(f"Loaded {len(tweets)} tweets")
-        print(f"Loaded {len(urls)} URLs")
+        print(f"Loaded {num_rows} users")
+        print(f"Loaded {num_rows * 10} tweets")
+        print(f"Loaded {num_rows * 20} URLs")
         
     except Exception as e:
         print(f"Error: {e}")

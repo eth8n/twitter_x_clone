@@ -18,6 +18,7 @@ RUN pip install -r requirements.txt
 
 # copy project
 COPY . /usr/src/app/
+RUN chmod +x /usr/src/app/init_db.py
 
 # run entrypoint.sh
-ENTRYPOINT ["/usr/src/app/entrypoint.sh"]
+CMD ["sh", "-c", "python init_db.py && python manage.py run -h 0.0.0.0"]

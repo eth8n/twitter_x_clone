@@ -18,6 +18,7 @@ services:
       - DATABASE=postgres
       - SQL_HOST=db
       - SQL_PORT=5432
+      - DATABASE_URL=postgresql://hello_flask:hello_flask@db:5432/hello_flask_dev
     depends_on:
       - db
   db:

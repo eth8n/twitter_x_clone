@@ -1,6 +1,15 @@
 # Twitter-like Application
+[![](https://github.com/eth8n/final_project_csci143/workflows/tests_denormalized/badge.svg)](https://github.com/eth8n/final_project_csci143/actions?query=workflow%3Atests)
 
-A web application that allows users to post tweets, share URLs, and interact with other users' content.
+A web application that allows users to create accounts, post messages (tweets), and search through content. The application is built with Flask and PostgreSQL.
+
+## Features
+
+- User authentication (login, logout, account creation)
+- Post messages with a 280 character limit
+- Browse messages on the home page with pagination
+- Full-text search functionality with highlighted results
+- Responsive web design
 
 ## Prerequisites
 
@@ -12,8 +21,8 @@ A web application that allows users to post tweets, share URLs, and interact wit
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
-cd <repository-name>
+git clone <https://github.com/eth8n/final_project_csci143.git>
+cd <rhttps://github.com/eth8n/final_project_csci143.git>
 ```
 
 2. Create environment files:
@@ -21,27 +30,16 @@ cd <repository-name>
 For development:
 ```bash
 # Create .env.dev file
-echo "FLASK_APP=manage.py
-FLASK_ENV=development
+echo "FLASK_APP=project/__init__.py
 FLASK_DEBUG=1
-DATABASE_URL=postgresql://hello_flask:hello_flask@db:5432/hello_flask_dev" > .env.dev
+DATABASE_URL=postgresql://hello_flask:hello_flask@db:5432/hello_flask_dev
+SQL_HOST=db
+SQL_PORT=5432
+DATABASE=postgres
+APP_FOLDER=/usr/src/app" > .env.dev
 ```
 
-For production:
-```bash
-# Create .env.prod file
-echo "FLASK_APP=manage.py
-FLASK_ENV=production
-FLASK_DEBUG=0
-DATABASE_URL=postgresql://hello_flask:hello_flask@db:5432/hello_flask_prod" > .env.prod
-
-# Create .env.prod.db file
-echo "POSTGRES_USER=hello_flask
-POSTGRES_PASSWORD=hello_flask
-POSTGRES_DB=hello_flask_prod" > .env.prod.db
-```
-
-## Running the Application
+## Connecting to Server
 
 ### Development Environment
 
@@ -49,53 +47,31 @@ POSTGRES_DB=hello_flask_prod" > .env.prod.db
 ```bash
 docker-compose up --build
 ```
-
-2. Load test data (optional):
+2. Add test data to database (if first time running)
 ```bash
-# For a small dataset (recommended for development)
-docker-compose exec db python3 /docker-entrypoint-initdb.d/load_test_data.py --rows 100
-
-# For a large dataset
-docker-compose exec db python3 /docker-entrypoint-initdb.d/load_test_data.py --rows 1000000
+docker-compose exec db python3 /scripts/load_test_data.py
 ```
 
 3. Access the application:
 - Web application: http://localhost:3797
 
-### Production Environment
-
-1. Start the production environment:
-```bash
-docker-compose -f docker-compose.prod.yml up --build
-```
-
-2. Load test data (optional):
-```bash
-# For a small dataset
-docker-compose -f docker-compose.prod.yml exec db python3 /docker-entrypoint-initdb.d/load_test_data.py --rows 100
-
-# For a large dataset
-docker-compose -f docker-compose.prod.yml exec db python3 /docker-entrypoint-initdb.d/load_test_data.py --rows 1000000
-```
-
-3. Access the application:
-- Web application: http://localhost:3798
-
-## Database Schema
+## Database
 
 The application uses PostgreSQL with the following tables:
 
 ### Users
-- Primary key: user_id
-- Fields: username, email, created_at, last_login, is_active
+- Stores user account information (username, email, password hash)
+- Tracks account creation and last login times
+- Enables user authentication
 
 ### Tweets
-- Primary key: tweet_id
-- Fields: user_id (foreign key), content, created_at, likes_count, retweets_count
+- Stores user messages with content limited to 280 characters
+- Tracks creation time, likes, and retweets
+- Supports full-text search using PostgreSQL's RUM extension
 
 ### URLs
-- Primary key: url_id
-- Fields: tweet_id (foreign key), url, created_at, is_valid, last_checked
+- Extracts and stores URLs mentioned in tweets
+- Tracks URL validity and when it was last checked
 
 ## Stopping the Application
 

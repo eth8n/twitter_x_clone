@@ -66,7 +66,14 @@
 <body>
     <div class="menu">
         <a href="{{ url_for('index') }}">Home</a>
-        <!-- Add more menu items here -->
+        {% if current_user.is_authenticated %}
+            <a href="{{ url_for('create_message') }}">Create Message</a>
+            <a href="{{ url_for('logout') }}">Logout</a>
+        {% else %}
+            <a href="{{ url_for('login') }}">Login</a>
+            <a href="{{ url_for('create_account') }}">Create Account</a>
+        {% endif %}
+        <a href="{{ url_for('search') }}">Search</a>
     </div>
 
     <h1>Recent Tweets</h1>

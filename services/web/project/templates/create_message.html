@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Message - Twitter Clone</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .create-message-form {
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            min-height: 100px;
+            resize: vertical;
+        }
+        button {
+            background-color: #1da1f2;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #1991db;
+        }
+        .error-message {
+            color: red;
+            margin-bottom: 15px;
+        }
+        .menu {
+            background-color: #1da1f2;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .menu a {
+            color: white;
+            text-decoration: none;
+            margin-right: 15px;
+        }
+        .menu a:hover {
+            text-decoration: underline;
+        }
+        .char-count {
+            text-align: right;
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="menu">
+        <a href="{{ url_for('index') }}">Home</a>
+        <a href="{{ url_for('logout') }}">Logout</a>
+    </div>
+
+    <div class="create-message-form">
+        <h2>Create New Message</h2>
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="error-message">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        <form method="POST" action="{{ url_for('create_message') }}">
+            <div class="form-group">
+                <label for="content">What's happening?</label>
+                <textarea id="content" name="content" maxlength="280" required></textarea>
+                <div class="char-count"><span id="char-count">0</span>/280</div>
+            </div>
+            <button type="submit">Post Message</button>
+        </form>
+    </div>
+
+    <script>
+        const textarea = document.getElementById('content');
+        const charCount = document.getElementById('char-count');
+        
+        textarea.addEventListener('input', function() {
+            const remaining = this.value.length;
+            charCount.textContent = remaining;
+        });
+    </script>
+</body>
+</html> 

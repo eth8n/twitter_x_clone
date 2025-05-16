@@ -1,5 +1,5 @@
 # Twitter-like Application
-[![](https://github.com/eth8n/final_project_csci143/workflows/test.yml/badge.svg)](https://github.com/eth8n/final_project_csci143/test.yml/actions?query=workflow%3Atests)
+[![Tests](https://github.com/eth8n/final_project_csci143/actions/workflows/test.yml/badge.svg)](https://github.com/eth8n/final_project_csci143/actions/workflows/test.yml)
 
 A web application that allows users to create accounts, post messages (tweets), and search through content. The application is built with Flask and PostgreSQL.
 

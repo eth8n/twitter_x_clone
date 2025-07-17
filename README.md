@@ -1,6 +1,6 @@
 # Twitter-like Application
 
-[![Tests](https://github.com/eth8n/final_project_csci143/actions/workflows/test.yml/badge.svg)](https://github.com/eth8n/final_project_csci143/actions/workflows/test.yml)
+[![Tests](https://github.com/eth8n/twitter_x_clone/actions/workflows/test.yml/badge.svg)](https://github.com/eth8n/twitter_x_clone/actions/workflows/test.yml)
 
 A web application that allows users to create accounts, post messages (tweets), and full-text search through content. The application is built with Flask and PostgreSQL.
 
@@ -22,8 +22,8 @@ A web application that allows users to create accounts, post messages (tweets), 
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/eth8n/final_project_csci143.git
-cd final_project_csci143
+git clone https://github.com/eth8n/twitter_x_clone.git
+cd twitter_x_clone
 ```
 
 2. Create environment files:
